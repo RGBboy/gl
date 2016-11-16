@@ -1,0 +1,27 @@
+{
+  "name": "gl",
+  "version": "1.0.0",
+  "description": "WebGL in Elm",
+  "author": "RGBboy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RGBboy/gl.git"
+  },
+  "private": true,
+  "main": "./lib/server",
+  "scripts": {
+    "start": "node ./lib/server",
+    "bundle": "uglifyjs ./build/client.js -c warnings=false -m -o ./public/client.js",
+    "build": "npm run build:client && npm run bundle",
+    "build:client": "elm-make ./src/Client.elm --output ./build/client.js",
+    "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "dependencies": {
+    "ecstatic": "^1.4.0"
+  },
+  "devDependencies": {
+    "elm": "^0.18.0",
+    "uglify-js": "^2.6.1"
+  },
+  "license": "ISC"
+}
