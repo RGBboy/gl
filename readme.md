@@ -1,6 +1,6 @@
 # gl
 
-Full stack chat with Elm and Node.js
+WebGL in Elm
 
 ## Getting Started
 
