@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Color exposing (..)
+import Math.Vector2 exposing (..)
 import Math.Vector3 exposing (..)
 import Math.Matrix4 exposing (..)
 import WebGL exposing (..)
@@ -72,30 +73,50 @@ uniforms t =
 
 -- SHADERS
 
-vertexShader : Shader { attr | position : Vec3 } { unif | time: Float, perspective : Mat4, camera : Mat4 } { vcolor : Vec3 }
+vertexShader : Shader { attr | position : Vec3 } { unif | perspective : Mat4, camera : Mat4 } { vposition : Vec3 }
 vertexShader =
   [glsl|
 
 attribute vec3 position;
-uniform float time;
 uniform mat4 perspective;
 uniform mat4 camera;
-varying vec3 vcolor;
+varying vec3 vposition;
 void main () {
   gl_Position = perspective * camera * vec4(position, 1.0);
-  vcolor = vec3(1.0, 1.0, 1.0) - (cos(time) * position);
+  vposition = position + vec3(0.5, 0.5, 0.0);
 }
 
 |]
 
-fragmentShader : Shader {} { unif | time: Float, perspective : Mat4, camera : Mat4 } { vcolor : Vec3 }
+fragmentShader : Shader {} { unif | time: Float } { vposition : Vec3 }
 fragmentShader =
   [glsl|
 
 precision mediump float;
-varying vec3 vcolor;
+varying vec3 vposition;
+uniform float time;
+
+vec3 c;
+vec2 r = vec2(-480.0, 480.0);
+vec2 uv,p;
+float l,z;
+
 void main () {
-  gl_FragColor = vec4(vcolor, 1.0);
+
+  z = time;
+  p = vposition.xy;
+
+  for (int i = 0; i < 3; i++) {
+    uv = p;
+    p -= 0.5;
+    p.x *= r.x / r.y;
+    z += 0.07;
+    l = length(p);
+    uv += p / l * (sin(z) + 1.0) * abs(sin(l * 9.0 - z * 2.0));
+    c[i] = 0.01 / length(abs(mod(uv,1.) - 0.5));
+  }
+
+  gl_FragColor = vec4(c/l, time);
 }
 
 |]
