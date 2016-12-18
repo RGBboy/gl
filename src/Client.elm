@@ -7,16 +7,22 @@ import Math.Matrix4 exposing (..)
 import WebGL exposing (..)
 import Html
 import AnimationFrame
-import Html.Attributes exposing (width, height)
+import Html.Attributes as A
 import Time exposing (Time)
 
+
+width : Float
+width = 480
+
+height : Float
+height = 480
 
 
 main : Program Never Time Time
 main =
   Html.program
     { init = ( 0, Cmd.none )
-    , view = scene >> WebGL.toHtml [ width 480, height 480 ]
+    , view = scene >> WebGL.toHtml [ A.width (round width), A.height (round height) ]
     , subscriptions = (\model -> AnimationFrame.diffs Basics.identity)
     , update = (\dt theta -> ( theta + dt / 1000, Cmd.none ))
     }
@@ -62,10 +68,10 @@ scene : Float -> List Renderable
 scene t =
   [ render vertexShader fragmentShader plane (uniforms t) ]
 
-uniforms : Float -> { time: Float, perspective : Mat4, camera : Mat4 }
+uniforms : Float -> { time: Float, resolution: Vec2, camera : Mat4 }
 uniforms t =
-  { time = t
-  , perspective = makePerspective 45 1 0.01 100
+  { resolution = vec2 width height
+  , time = t
   , camera = makeLookAt (vec3 0 0 1) (vec3 0 0 0) (vec3 0 1 0)
   }
 
@@ -73,50 +79,50 @@ uniforms t =
 
 -- SHADERS
 
-vertexShader : Shader { attr | position : Vec3 } { unif | perspective : Mat4, camera : Mat4 } { vposition : Vec3 }
+vertexShader : Shader { attr | position : Vec3 } { unif | camera : Mat4 } { vposition : Vec2 }
 vertexShader =
   [glsl|
 
 attribute vec3 position;
-uniform mat4 perspective;
 uniform mat4 camera;
-varying vec3 vposition;
+varying vec2 vposition;
+
 void main () {
-  gl_Position = perspective * camera * vec4(position, 1.0);
-  vposition = position + vec3(0.5, 0.5, 0.0);
+  gl_Position = camera * vec4(position, 1.0);
+  vposition = gl_Position.xy;
 }
 
 |]
 
-fragmentShader : Shader {} { unif | time: Float } { vposition : Vec3 }
+fragmentShader : Shader {} { unif | time: Float, resolution: Vec2 } { vposition : Vec2 }
 fragmentShader =
   [glsl|
 
-precision mediump float;
-varying vec3 vposition;
+precision highp float;
+varying vec2 vposition;
 uniform float time;
+uniform vec2 resolution;
 
-vec3 c;
-vec2 r = vec2(-480.0, 480.0);
-vec2 uv,p;
-float l,z;
 
 void main () {
 
+  vec3 c;
+  vec2 uv,p;
+  float l,z;
   z = time;
   p = vposition.xy;
+  p.x *= resolution.x / resolution.y;
 
   for (int i = 0; i < 3; i++) {
     uv = p;
-    p -= 0.5;
-    p.x *= r.x / r.y;
-    z += 0.07;
+
+    z += 0.05;
     l = length(p);
-    uv += p / l * (sin(z) + 1.0) * abs(sin(l * 9.0 - z * 2.0));
-    c[i] = 0.01 / length(abs(mod(uv,1.) - 0.5));
+    uv += p / l * (cos(z) + 1.0) * abs(cos(l * 9.0 - z * 2.0));
+    c[i] = 0.02 / length(abs(mod(uv, 1.0) - 0.5));
   }
 
-  gl_FragColor = vec4(c/l, time);
+  gl_FragColor = vec4(c / l, 1.0);
 }
 
 |]
