@@ -10,6 +10,7 @@ import Html.Attributes exposing (width, height)
 import Time exposing (Time)
 
 
+
 main : Program Never Time Time
 main =
   Html.program
@@ -25,10 +26,8 @@ main =
 
 
 type alias Vertex =
-  { color : Vec3
-  , position : Vec3
+  { position : Vec3
   }
-
 
 plane : Drawable Vertex
 plane =
@@ -45,27 +44,13 @@ plane =
     rbt =
       vec3 1 -1 0
   in
-    Triangle (face yellow rft lft lbt rbt)
+    Triangle (face rft lft lbt rbt)
 
-
-face : Color -> Vec3 -> Vec3 -> Vec3 -> Vec3 -> List ( Vertex, Vertex, Vertex )
-face rawColor a b c d =
-  let
-    color =
-      let
-        c = toRgb rawColor
-      in
-        vec3
-          (toFloat c.red / 255)
-          (toFloat c.green / 255)
-          (toFloat c.blue / 255)
-
-    vertex position =
-        Vertex color position
-  in
-    [ ( vertex a, vertex b, vertex c )
-    , ( vertex c, vertex d, vertex a )
-    ]
+face : Vec3 -> Vec3 -> Vec3 -> Vec3 -> List ( Vertex, Vertex, Vertex )
+face a b c d =
+  [ ( Vertex a, Vertex b, Vertex c )
+  , ( Vertex c, Vertex d, Vertex a )
+  ]
 
 
 
@@ -73,48 +58,44 @@ face rawColor a b c d =
 
 
 scene : Float -> List Renderable
-scene angle =
-  [ render vertexShader fragmentShader plane (uniforms angle) ]
+scene t =
+  [ render vertexShader fragmentShader plane (uniforms t) ]
 
-
-uniforms : Float -> { perspective : Mat4, camera : Mat4, shade : Float }
+uniforms : Float -> { time: Float, perspective : Mat4, camera : Mat4 }
 uniforms t =
-  { perspective = makePerspective 45 1 0.01 100
+  { time = t
+  , perspective = makePerspective 45 1 0.01 100
   , camera = makeLookAt (vec3 0 0 1) (vec3 0 0 0) (vec3 0 1 0)
-  , shade = 0.8
   }
 
 
 
 -- SHADERS
 
-
-vertexShader : Shader { attr | position : Vec3, color : Vec3 } { unif | perspective : Mat4, camera : Mat4 } { vcolor : Vec3 }
+vertexShader : Shader { attr | position : Vec3 } { unif | time: Float, perspective : Mat4, camera : Mat4 } { vcolor : Vec3 }
 vertexShader =
   [glsl|
 
 attribute vec3 position;
-attribute vec3 color;
+uniform float time;
 uniform mat4 perspective;
 uniform mat4 camera;
 varying vec3 vcolor;
 void main () {
-    gl_Position = perspective * camera * vec4(position, 1.0);
-    vcolor = color;
+  gl_Position = perspective * camera * vec4(position, 1.0);
+  vcolor = vec3(1.0, 1.0, 1.0) - (cos(time * 4.0) * position);
 }
 
 |]
 
-
-fragmentShader : Shader {} { u | shade : Float } { vcolor : Vec3 }
+fragmentShader : Shader {} { unif | time: Float, perspective : Mat4, camera : Mat4 } { vcolor : Vec3 }
 fragmentShader =
   [glsl|
 
 precision mediump float;
-uniform float shade;
 varying vec3 vcolor;
 void main () {
-    gl_FragColor = shade * vec4(vcolor, 1.0);
+  gl_FragColor = vec4(vcolor, 1.0);
 }
 
 |]
