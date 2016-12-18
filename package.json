@@ -12,6 +12,7 @@
   "scripts": {
     "start": "node ./lib/server",
     "bundle": "uglifyjs ./build/client.js -c warnings=false -m -o ./public/client.js",
+    "build:watch": "chokidar 'src/*.elm' -c 'elm-make ./src/Client.elm --output ./public/client.js'",
     "build": "npm run build:client && npm run bundle",
     "build:client": "elm-make ./src/Client.elm --output ./build/client.js",
     "test": "echo \"Error: no test specified\" && exit 0"
@@ -20,6 +21,7 @@
     "ecstatic": "^1.4.0"
   },
   "devDependencies": {
+    "chokidar-cli": "^1.2.0",
     "elm": "^0.18.0",
     "uglify-js": "^2.6.1"
   },

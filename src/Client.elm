@@ -15,9 +15,9 @@ main : Program Never Time Time
 main =
   Html.program
     { init = ( 0, Cmd.none )
-    , view = scene >> WebGL.toHtml [ width 400, height 400 ]
+    , view = scene >> WebGL.toHtml [ width 480, height 480 ]
     , subscriptions = (\model -> AnimationFrame.diffs Basics.identity)
-    , update = (\dt theta -> ( theta + dt / 5000, Cmd.none ))
+    , update = (\dt theta -> ( theta + dt / 1000, Cmd.none ))
     }
 
 
@@ -83,7 +83,7 @@ uniform mat4 camera;
 varying vec3 vcolor;
 void main () {
   gl_Position = perspective * camera * vec4(position, 1.0);
-  vcolor = vec3(1.0, 1.0, 1.0) - (cos(time * 4.0) * position);
+  vcolor = vec3(1.0, 1.0, 1.0) - (cos(time) * position);
 }
 
 |]
