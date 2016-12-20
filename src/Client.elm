@@ -12,6 +12,7 @@ import Time exposing (Time)
 
 import A
 import B
+import C
 
 width : Float
 width = 480
@@ -68,7 +69,7 @@ face a b c d =
 
 scene : Float -> List Renderable
 scene t =
-  [ render B.vertexShader B.fragmentShader plane (uniforms t)]
+  [ render C.vertexShader C.fragmentShader plane (uniforms t)]
 
 uniforms : Float -> { time: Float, resolution: Vec2, camera : Mat4 }
 uniforms t =
